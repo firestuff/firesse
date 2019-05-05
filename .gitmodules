@@ -1,0 +1,3 @@
+[submodule "firecgi"]
+	path = firecgi
+	url = git@github.com:firestuff/firecgi.git
