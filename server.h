@@ -1,6 +1,6 @@
 #pragma once
 
-#include "firecgi/firecgi.h"
+#include "firecgi/server.h"
 #include "stream.h"
 
 namespace firesse {

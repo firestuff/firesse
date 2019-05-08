@@ -2,7 +2,7 @@
 #include <glog/logging.h>
 #include <sys/time.h>
 
-#include "firesse.h"
+#include "server.h"
 
 DEFINE_int32(port, 9000, "TCP port to bind");
 

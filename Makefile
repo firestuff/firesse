@@ -2,18 +2,20 @@ FIRE_CXX ?= clang++
 FIRE_CXXFLAGS ?= -O3 -std=gnu++2a -Wall -Werror
 FIRE_LDLIBS ?= -lgflags -lglog -lpthread
 
-all: firesse.a example_clock
+all: firesse.a firesse.o example_clock
 
-objects = firesse.o stream.o
+objects = server.o stream.o
 
-_firecgi:
+firecgi/firecgi.o:
 	$(MAKE) --directory=firecgi
 
-firesse.a: $(objects) _firecgi
-	ar x firecgi/firecgi.a
-	ar rcs $@ $(objects) $(shell ar t firecgi/firecgi.a)
+firesse.a: $(objects)
+	ar rcs $@ $^
 
-example_clock: example_clock.o firesse.a
+firesse.o: $(objects) firecgi/firecgi.o
+	ld --relocatable --output=$@ $+
+
+example_clock: example_clock.o firesse.o
 	$(FIRE_CXX) $(FIRE_CXXFLAGS) -o $@ $+ $(FIRE_LDLIBS)
 
 %.o: %.cc *.h Makefile
