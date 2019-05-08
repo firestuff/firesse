@@ -2,8 +2,8 @@
 
 namespace firesse {
 
-Stream::Stream(std::unique_ptr<firecgi::Request> request)
-		: request_(std::move(request)) {}
+Stream::Stream(firecgi::Request* request)
+		: request_(request) {}
 
 bool Stream::WriteEvent(const std::string& data, uint64_t id, const std::string& type) {
 	if (id) {

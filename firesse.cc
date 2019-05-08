@@ -5,7 +5,7 @@ namespace firesse {
 Server::Server(int port, const std::function<void(std::unique_ptr<Stream>)>& callback)
 		: callback_(callback),
 		  firecgi_server_(port,
-		                  [this](std::unique_ptr<firecgi::Request> request) { OnRequest(std::move(request)); },
+		                  [this](firecgi::Request* request) { OnRequest(request); },
 						  1,
 						  {"HTTP_ACCEPT"}) {}
 
@@ -13,7 +13,7 @@ void Server::Serve() {
 	firecgi_server_.Serve();
 }
 
-void Server::OnRequest(std::unique_ptr<firecgi::Request> request) {
+void Server::OnRequest(firecgi::Request* request) {
 	if (request->GetParam("HTTP_ACCEPT") != "text/event-stream") {
 		LOG(WARNING) << "bad HTTP_ACCEPT: " << request->GetParam("HTTP_ACCEPT");
 		request->WriteHeader("Status", "400 Bad Request");
@@ -24,7 +24,7 @@ void Server::OnRequest(std::unique_ptr<firecgi::Request> request) {
 	}
 	request->WriteHeader("Content-Type", "text/event-stream");
 	request->WriteBody("");
-	callback_(std::make_unique<Stream>(std::move(request)));
+	callback_(std::make_unique<Stream>(request));
 }
 
 } // namespace firesse

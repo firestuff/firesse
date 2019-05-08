@@ -11,7 +11,7 @@ class Server {
 	void Serve();
 
   private:
-	void OnRequest(std::unique_ptr<firecgi::Request> request);
+	void OnRequest(firecgi::Request* request);
 
 	std::function<void(std::unique_ptr<Stream>)> callback_;
 	firecgi::Server firecgi_server_;
