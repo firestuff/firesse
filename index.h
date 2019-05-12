@@ -9,9 +9,10 @@ class Index {
   public:
 	void Add(Stream* stream);
 	void Remove(Stream* stream);
+	void Freshen(Stream* stream);
 
   private:
-	std::mutex mu_;
+	std::recursive_mutex mu_;
 	Stream* freshest_ = nullptr;
 	Stream* stalest_ = nullptr;
 };

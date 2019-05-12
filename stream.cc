@@ -22,7 +22,7 @@ void Stream::OnClose(const std::function<void()>& callback) {
 bool Stream::WriteEvent(const std::string& data, uint64_t id, const std::string& type) {
 	{
 		std::lock_guard l(mu_);
-		last_message_time_ = std::chrono::steady_clock::now();
+		index_->Freshen(this);
 	}
 
 	return request_->InTransaction<bool>([=]() {

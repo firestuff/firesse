@@ -5,7 +5,7 @@ namespace firesse {
 void Index::Add(Stream* stream) {
 	std::lock_guard l(mu_);
 
-	// Implicitly freshest
+	stream->last_message_time_ = std::chrono::steady_clock::now();
 	stream->fresher_ = nullptr;
 	stream->staler_ = freshest_;
 	if (stream->staler_) {
@@ -34,6 +34,17 @@ void Index::Remove(Stream* stream) {
 		stream->staler_->fresher_ = stream->fresher_;
 		stream->staler_ = nullptr;
 	}
+}
+
+void Index::Freshen(Stream* stream) {
+	std::lock_guard l(mu_);
+	if (freshest_ == stream) {
+		// Shortcut
+		stream->last_message_time_ = std::chrono::steady_clock::now();
+		return;
+	}
+	Remove(stream);
+	Add(stream);
 }
 
 } // namespace firesse
