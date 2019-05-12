@@ -1,6 +1,8 @@
+#include <atomic>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <sys/time.h>
+#include <thread>
 
 #include "server.h"
 
@@ -10,16 +12,46 @@ int main(int argc, char *argv[]) {
 	google::InitGoogleLogging(argv[0]);
 	gflags::ParseCommandLineFlags(&argc, &argv, true);
 
-	firesse::Server server(FLAGS_port, [](std::unique_ptr<firesse::Stream> stream) {
-		while (true) {
+	std::mutex mu;
+	std::unordered_set<firesse::Stream*> streams;
+	std::atomic<bool> running = true;
+
+	std::thread clock([&streams, &mu, &running]() {
+		while (running) {
+			sleep(1);
+
 			timeval tv;
 			PCHECK(gettimeofday(&tv, nullptr) == 0);
-			uint64_t time_ms = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-			if (!stream->WriteEvent(std::to_string(time_ms), 0, "time")) {
-				break;
+			const uint64_t time_ms = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+			const auto time_str = std::to_string(time_ms);
+
+			{
+				std::lock_guard l(mu);
+				for (auto* stream : streams) {
+					stream->WriteEvent(time_str, 0, "time");
+				}
 			}
-			sleep(1);
 		}
 	});
+
+	firesse::Server server(FLAGS_port, [&streams, &mu](firesse::Stream* stream) {
+		LOG(INFO) << "new stream: " << stream;
+
+		std::lock_guard l(mu);
+		streams.insert(stream);
+		stream->OnClose([stream, &streams, &mu]() {
+			LOG(INFO) << "stream closed: " << stream;
+
+			std::lock_guard l(mu);
+			streams.erase(stream);
+		});
+	});
+	server.RegisterSignalHandlers();
 	server.Serve();
+
+	running = false;
+	clock.join();
+
+	gflags::ShutDownCommandLineFlags();
+	google::ShutdownGoogleLogging();
 }

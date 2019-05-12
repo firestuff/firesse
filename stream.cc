@@ -3,7 +3,17 @@
 namespace firesse {
 
 Stream::Stream(firecgi::Request* request)
-		: request_(request) {}
+		: request_(request) {
+	request->OnClose([this]() {
+		if (on_close_) {
+			on_close_();
+		}
+	});
+}
+
+void Stream::OnClose(const std::function<void()>& callback) {
+	on_close_ = callback;
+}
 
 bool Stream::WriteEvent(const std::string& data, uint64_t id, const std::string& type) {
 	return request_->InTransaction<bool>([=]() {
