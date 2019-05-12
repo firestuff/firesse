@@ -1,6 +1,6 @@
 #pragma once
 
-#include <queue>
+#include <set>
 
 #include "firecgi/server.h"
 #include "stream.h"
@@ -19,6 +19,9 @@ class Server {
 
 	std::function<void(Stream*)> callback_;
 	firecgi::Server firecgi_server_;
+
+	std::mutex mu_;
+	std::set<Stream*, IsFresherStream> streams_;
 };
 
 } // namespace firesse

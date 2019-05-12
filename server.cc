@@ -26,6 +26,19 @@ void Server::OnRequest(firecgi::Request* request) {
 	request->WriteHeader("X-Accel-Buffering", "no");
 	request->WriteBody("");
 	auto stream = new Stream(request);
+
+	{
+		std::lock_guard l(mu_);
+		streams_.insert(stream);
+
+		request->OnClose([this, stream]() {
+			std::lock_guard l(mu_);
+			stream->Close();
+			streams_.erase(stream);
+			delete stream;
+		});
+	}
+
 	callback_(stream);
 }
 
