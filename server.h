@@ -3,6 +3,8 @@
 #include <set>
 
 #include "firecgi/server.h"
+
+#include "index.h"
 #include "stream.h"
 
 namespace firesse {
@@ -18,10 +20,8 @@ class Server {
 	void OnRequest(firecgi::Request* request);
 
 	std::function<void(Stream*)> callback_;
+	Index index_;
 	firecgi::Server firecgi_server_;
-
-	std::mutex mu_;
-	std::set<Stream*, IsFresherStream> streams_;
 };
 
 } // namespace firesse

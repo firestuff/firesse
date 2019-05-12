@@ -1,9 +1,19 @@
 #include "stream.h"
 
+#include "index.h"
+
 namespace firesse {
 
-Stream::Stream(firecgi::Request* request)
-		: request_(request) {}
+Stream::Stream(firecgi::Request* request, Index* index)
+		: request_(request),
+		  index_(index) {
+	index_->Add(this);
+}
+
+Stream::~Stream() {
+	std::lock_guard l(mu_);
+	index_->Remove(this);
+}
 
 void Stream::OnClose(const std::function<void()>& callback) {
 	on_close_ = callback;
@@ -31,19 +41,10 @@ bool Stream::End() {
 	return request_->End();
 }
 
-std::chrono::steady_clock::time_point Stream::LastMessageTime() {
-	std::lock_guard l(mu_);
-	return last_message_time_;
-}
-
 void Stream::Close() {
 	if (on_close_) {
 		on_close_();
 	}
-}
-
-bool IsFresherStream::operator() (Stream* a, Stream* b) const {
-	return a->LastMessageTime() > b->LastMessageTime();
 }
 
 } // namespace firesse

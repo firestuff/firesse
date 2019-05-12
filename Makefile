@@ -5,7 +5,7 @@ FIRE_LDLIBS ?= -lgflags -lglog -lpthread
 
 all: firesse.a firesse.o firesse.so example_clock
 
-objects = server.o stream.o
+objects = server.o index.o stream.o
 
 firecgi/firecgi.o:
 	$(MAKE) --directory=firecgi firecgi.o
