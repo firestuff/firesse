@@ -47,4 +47,48 @@ void Index::Freshen(Stream* stream) {
 	Add(stream);
 }
 
+std::chrono::nanoseconds Index::WithStalest(std::function<void(Stream*)> callback, const std::chrono::nanoseconds& min_stale) {
+	Stream* stalest = nullptr;
+	std::chrono::nanoseconds ret;
+	const auto now = std::chrono::steady_clock::now();
+	const auto latest = now - min_stale;
+
+	{
+		std::lock_guard l(mu_);
+		if (!stalest_) {
+			return min_stale;
+		}
+		if (stalest_->last_message_time_ > latest) {
+			return stalest_->last_message_time_ - latest;
+		}
+
+		// stalest_ is valid for callback
+		stalest = stalest_;
+
+		if (stalest->fresher_) {
+			if (stalest->fresher_->last_message_time_ > latest) {
+				ret = stalest_->fresher_->last_message_time_ - latest;
+			}
+			// Otherwise ret is 0 for immediate cycle
+		} else {
+			ret = min_stale;
+		}
+
+		if (!stalest->mu_.try_lock()) {
+			// We're acquiring mutexes in the wrong order here; normally it's
+			// (Stream, Index), but we're doing (Index, Stream). That means we
+			// may deadlock. We take the lower-priority path and fail in case
+			// of deadlock.
+			return {};
+		}
+
+		Freshen(stalest);
+	}
+
+	callback(stalest);
+	stalest->mu_.unlock();
+
+	return ret;
+}
+
 } // namespace firesse

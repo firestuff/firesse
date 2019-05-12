@@ -5,6 +5,7 @@
 #include "firecgi/server.h"
 
 #include "index.h"
+#include "keepalive.h"
 #include "stream.h"
 
 namespace firesse {
@@ -21,6 +22,7 @@ class Server {
 
 	std::function<void(Stream*)> callback_;
 	Index index_;
+	KeepAlive keep_alive_;
 	firecgi::Server firecgi_server_;
 };
 

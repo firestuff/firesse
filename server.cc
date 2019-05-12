@@ -4,12 +4,15 @@ namespace firesse {
 
 Server::Server(int port, const std::function<void(Stream*)>& callback)
 		: callback_(callback),
+		  keep_alive_(std::chrono::seconds(15), &index_),
 		  firecgi_server_(port,
 		                  [this](firecgi::Request* request) { OnRequest(request); },
 						  1) {}
 
 void Server::Serve() {
+	keep_alive_.Start();
 	firecgi_server_.Serve();
+	keep_alive_.Stop();
 }
 
 void Server::Shutdown() {

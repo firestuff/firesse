@@ -19,11 +19,10 @@ void Stream::OnClose(const std::function<void()>& callback) {
 	on_close_ = callback;
 }
 
-bool Stream::WriteEvent(const std::string& data, uint64_t id, const std::string& type) {
-	{
-		std::lock_guard l(mu_);
-		index_->Freshen(this);
-	}
+bool Stream::WriteEvent(const std::string_view& data, uint64_t id, const std::string& type) {
+	std::lock_guard l(mu_);
+
+	index_->Freshen(this);
 
 	return request_->InTransaction<bool>([=]() {
 		if (id) {
@@ -35,6 +34,13 @@ bool Stream::WriteEvent(const std::string& data, uint64_t id, const std::string&
 		request_->WriteBody("data: ", data, "\n\n");
 		return request_->Flush();
 	});
+}
+
+bool Stream::WriteRaw(const std::string_view& data) {
+	std::lock_guard l(mu_);
+
+	request_->WriteBody(data);
+	return request_->Flush();
 }
 
 bool Stream::End() {
