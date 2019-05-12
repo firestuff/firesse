@@ -12,6 +12,10 @@ KeepAlive::KeepAlive(const std::chrono::nanoseconds& max_stale, Index* index)
 	PCHECK(shutdown_ >= 0) << "eventfd()";
 }
 
+KeepAlive::~KeepAlive() {
+	PCHECK(close(shutdown_) == 0);
+}
+
 void KeepAlive::Start() {
 	thread_ = std::thread([this]() {
 		int timeout = 0;	

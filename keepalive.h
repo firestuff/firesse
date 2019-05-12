@@ -9,6 +9,8 @@ namespace firesse {
 class KeepAlive {
   public:
 	KeepAlive(const std::chrono::nanoseconds& max_stale, Index* index);
+	~KeepAlive();
+
 	void Start();
 	void Stop();
 
