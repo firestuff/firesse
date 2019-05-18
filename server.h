@@ -11,19 +11,19 @@
 namespace firesse {
 
 class Server {
-  public:
-	Server(int port, const std::function<void(Stream*)>& callback);
-	void Serve();
-	void Shutdown();
-	void RegisterSignalHandlers();
+ public:
+  Server(int port, const std::function<void(Stream*)>& callback);
+  void Serve();
+  void Shutdown();
+  void RegisterSignalHandlers();
 
-  private:
-	void OnRequest(firecgi::Request* request);
+ private:
+  void OnRequest(firecgi::Request* request);
 
-	std::function<void(Stream*)> callback_;
-	Index index_;
-	KeepAlive keep_alive_;
-	firecgi::Server firecgi_server_;
+  std::function<void(Stream*)> callback_;
+  Index index_;
+  KeepAlive keep_alive_;
+  firecgi::Server firecgi_server_;
 };
 
-} // namespace firesse
+}  // namespace firesse
